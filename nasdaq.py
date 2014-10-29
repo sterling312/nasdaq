@@ -1,9 +1,9 @@
 #!/usr/bin/env python
-import pdb
 try:
     from urllib2.urlparse import urljoin
 except ImportError:
     from urllib.parse import urljoin
+import sys
 import json
 import logging
 import datetime
@@ -11,6 +11,8 @@ import time
 import array
 import requests
 from pyquery import PyQuery
+
+logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s')
 
 class Tick(array.array):
     max_tick = 20
@@ -22,12 +24,12 @@ class Tick(array.array):
 def pyquery_parser(html):
     error = None
     html = PyQuery(html)
-    symb = html.find('div.qwidget-symbol')
-    price = symb.next().text().lstrip('$')
+    p = html.find('div.qwidget-dollar').eq(0)
+    price = p.text().lstrip('$')
     if not price.replace('.','').isnumeric():
         raise TypeError('price is not numeric')
     price = float(price)
-    timestamp = symb.parent().next().find('span').text()
+    timestamp = p.parent().next().find('span').text()
     if len(timestamp)==10:
         timestamp = datetime.datetime.strptime(timestamp, '%m/%d/%Y')
         raise StopIteration('market closed')
@@ -84,3 +86,8 @@ class Nasdaq(object):
             msg = json.dumps(self.result)
             time.sleep(self.sleep)
 
+if __name__=='__main__':
+    qqq = Nasdaq(sleep=0)
+    for symbol in sys.argv[1:]:
+        qqq.add_symbol(symbol)
+    qqq.run()
