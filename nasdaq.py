@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 try:
-    from urllib2.urlparse import urljoin
+    from urllib2 import urlparse
+    urljoin = urlparse.urljoin
 except ImportError:
     from urllib.parse import urljoin
 import sys
@@ -26,7 +27,7 @@ def pyquery_parser(html):
     html = PyQuery(html)
     p = html.find('div.qwidget-dollar').eq(0)
     price = p.text().lstrip('$')
-    if not price.replace('.','').isnumeric():
+    if not price.replace('.','').isdigit():
         raise TypeError('price is not numeric')
     price = float(price)
     timestamp = p.parent().next().find('span').text()
