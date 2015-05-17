@@ -58,7 +58,6 @@ class Nasdaq(object):
             time.sleep(self.sleep)
 
 if __name__=='__main__':
-    ndq = Nasdaq(sleep=0)
     args = parser.parse_args()
     ndq = Nasdaq(sleep=args.sleep)
     ndq.subscribe(args.ticker.split(','))
