@@ -16,7 +16,7 @@ parser.add_argument('-s', '--sleep', type=int, default=0, help='sleep time betwe
 class Nasdaq(object):
     base_url = 'http://www.nasdaq.com'
     real_time_path = 'symbol/{}/real-time'
-    tickers = set()
+    tickers = {}
     def __init__(self, callback=print, sleep=0):
         self.sleep = sleep
         self.sess = requests.session()
@@ -33,32 +33,54 @@ class Nasdaq(object):
         return price
 
     def subscribe(self, ticker):
+        if ticker in self.tickers:
+            self.tickers[ticker] += 1
+        else:
+            self.tickers[ticker] = 1
+
+    def unsubscribe(self, ticker):
+        if ticker in self.tickers:
+            self.tickers[ticker] -= 1
+
+    def add_ticker(self, ticker):
         if isinstance(ticker, (str, unicode)):
-            self.tickers.add(ticker)
-        if isinstance(ticker, list):
+            self.subscribe(ticker)
+        elif isinstance(ticker, list):
             for i in ticker:
-                self.tickers.add(i)
+                self.subscribe(i)
+
+    def remove_ticker(self, ticker):
+        if isinstance(ticker, (str, unicode)):
+            self.unsubscribe(ticker)
+        elif isinstance(ticker, list):
+            for i in ticker:
+                self.unsubscribe(i)
 
     def request(self):
-        for ticker in self.tickers:
-            path = self.real_time_path.format(ticker)
-            req = self.sess.get(urlparse.urljoin(self.base_url, path))
-            if req.ok:
-                try:
-                    price = self.parse(req.text)
-                    self.callback(json.dumps(price))
-                except Exception as e:
-                    logging.error(e)
+        for ticker, i in self.tickers.items():
+            if i:
+                path = self.real_time_path.format(ticker)
+                req = self.sess.get(urlparse.urljoin(self.base_url, path))
+                if req.ok:
+                    try:
+                        price = self.parse(req.text)
+                        self.callback(json.dumps({ticker: price}))
+                        yield {ticker: price}
+                    except Exception as e:
+                        logging.error(e)
+                else:
+                    logging.error(req.reason)
             else:
-                logging.error(req.reason)
+                del self.tickers[ticker]
 
     def run(self):
         while True:
-            self.request()
+            for price in self.request():
+                continue
             time.sleep(self.sleep)
 
 if __name__=='__main__':
     args = parser.parse_args()
     ndq = Nasdaq(sleep=args.sleep)
-    ndq.subscribe(args.ticker.split(','))
+    ndq.add_ticker(args.ticker.split(','))
     ndq.run()
