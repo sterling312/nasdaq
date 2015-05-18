@@ -68,6 +68,7 @@ class Nasdaq(object):
                         yield {ticker: price}
                     except Exception as e:
                         logging.error(e)
+                        del self.tickers[ticker]
                 else:
                     logging.error(req.reason)
             else:
