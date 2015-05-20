@@ -37,12 +37,10 @@ class Nasdaq(object):
             self.tickers[ticker] += 1
         else:
             self.tickers[ticker] = 1
-        logging.debug('{} subscribed to {}'.format(self.tickers[ticker], ticker))
 
     def unsubscribe(self, ticker):
         if ticker in self.tickers:
             self.tickers[ticker] -= 1
-        logging.debug('{} subscribed to {}'.format(self.tickers[ticker], ticker))
 
     def add_ticker(self, ticker):
         if isinstance(ticker, (str, unicode)):
