@@ -64,7 +64,7 @@ class Nasdaq(object):
                 if req.ok:
                     try:
                         price = self.parse(req.text)
-                        self.callback(json.dumps({ticker: price}))
+                        self.callback(json.dumps({ticker.upper(): price}))
                         yield {ticker: price}
                     except Exception as e:
                         logging.error(e)
