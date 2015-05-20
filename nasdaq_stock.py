@@ -59,7 +59,7 @@ class Nasdaq(object):
     def request(self):
         for ticker, i in self.tickers.items():
             if i:
-                path = self.real_time_path.format(ticker)
+                path = self.real_time_path.format(ticker.lower())
                 req = self.sess.get(urlparse.urljoin(self.base_url, path))
                 if req.ok:
                     try:
